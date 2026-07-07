@@ -16,7 +16,7 @@ Dual-licensed under MIT or Apache-2.0.
 
 ```toml
 [dependencies]
-lowdisc = "0.1.0"
+lowdisc = "0.1.1"
 ```
 
 ```rust

@@ -1,6 +1,6 @@
 [package]
 name = "lowdisc"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.75"
 description = "Low-discrepancy sequences"
@@ -11,7 +11,7 @@ documentation = "https://docs.rs/lowdisc"
 readme = "README.md"
 keywords = ["qmc", "sobol", "halton", "sampling"]
 categories = ["algorithms", "science", "mathematics"]
-include = ["/src/**/*.rs", "/Cargo.toml", "/LICENSE-*", "/README.md"]
+include = ["/src/**/*.rs", "/Cargo.toml", "/CHANGELOG.md", "/LICENSE-*", "/README.md"]
 
 [dependencies]
 
