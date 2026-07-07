@@ -1,0 +1,19 @@
+[package]
+name = "lowdisc"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Low-discrepancy sequences"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/arclabs561/lowdisc"
+homepage = "https://github.com/arclabs561/lowdisc"
+documentation = "https://docs.rs/lowdisc"
+readme = "README.md"
+keywords = ["qmc", "sobol", "halton", "sampling"]
+categories = ["algorithms", "science", "mathematics"]
+include = ["/src/**/*.rs", "/Cargo.toml", "/LICENSE-*", "/README.md"]
+
+[dependencies]
+
+[package.metadata.docs.rs]
+all-features = true
