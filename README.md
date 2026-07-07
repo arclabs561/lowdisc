@@ -2,7 +2,6 @@
 
 [![crates.io](https://img.shields.io/crates/v/lowdisc.svg)](https://crates.io/crates/lowdisc)
 [![Documentation](https://docs.rs/lowdisc/badge.svg)](https://docs.rs/lowdisc)
-[![CI](https://github.com/arclabs561/lowdisc/actions/workflows/ci.yml/badge.svg)](https://github.com/arclabs561/lowdisc/actions/workflows/ci.yml)
 
 Low-discrepancy sequences.
 
@@ -11,8 +10,6 @@ Owen-scrambled Sobol points for quasi-Monte Carlo integration and deterministic
 sampling designs.
 
 Dual-licensed under MIT or Apache-2.0.
-
-[crates.io](https://crates.io/crates/lowdisc) | [docs.rs](https://docs.rs/lowdisc)
 
 ```toml
 [dependencies]
