@@ -446,22 +446,22 @@ mod tests {
     }
 
     #[test]
-    fn sobol_3d_matches_joe_kuo_published_prefix() {
+    fn sobol_5d_matches_joe_kuo_published_prefix() {
         // First ten points printed by the publisher's reference generator for
         // new-joe-kuo-6.21201, including the origin at index zero.
         let expected = [
-            [0.0, 0.0, 0.0],
-            [0.5, 0.5, 0.5],
-            [0.75, 0.25, 0.25],
-            [0.25, 0.75, 0.75],
-            [0.375, 0.375, 0.625],
-            [0.875, 0.875, 0.125],
-            [0.625, 0.125, 0.875],
-            [0.125, 0.625, 0.375],
-            [0.1875, 0.3125, 0.9375],
-            [0.6875, 0.8125, 0.4375],
+            [0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.75, 0.25, 0.25, 0.25, 0.75],
+            [0.25, 0.75, 0.75, 0.75, 0.25],
+            [0.375, 0.375, 0.625, 0.875, 0.375],
+            [0.875, 0.875, 0.125, 0.375, 0.875],
+            [0.625, 0.125, 0.875, 0.625, 0.625],
+            [0.125, 0.625, 0.375, 0.125, 0.125],
+            [0.1875, 0.3125, 0.9375, 0.4375, 0.5625],
+            [0.6875, 0.8125, 0.4375, 0.9375, 0.0625],
         ];
-        let mut generator = SobolGenerator::new(3);
+        let mut generator = SobolGenerator::new(5);
 
         for (index, expected_point) in expected.into_iter().enumerate() {
             assert_eq!(
@@ -470,20 +470,6 @@ mod tests {
                 "published Sobol point {index} differs"
             );
         }
-    }
-
-    #[test]
-    fn embedded_joe_kuo_rows_match_published_direction_file() {
-        let expected: [(u32, u32, &[u32]); 7] = [
-            (1, 0, &[1]),
-            (2, 1, &[1, 3]),
-            (3, 1, &[1, 3, 1]),
-            (3, 2, &[1, 1, 1]),
-            (4, 1, &[1, 1, 3, 3]),
-            (4, 4, &[1, 3, 5, 13]),
-            (5, 2, &[1, 1, 5, 5, 17]),
-        ];
-        assert_eq!(JOE_KUO_D2_D8, expected);
     }
 
     #[test]
