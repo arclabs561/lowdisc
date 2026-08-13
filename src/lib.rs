@@ -125,12 +125,12 @@ const SOBOL_BITS: usize = 52;
 const JOE_KUO_D2_D8: [(u32, u32, &[u32]); 7] = [
     // dim 2: s=1, poly = x+1, a=0, m=[1]
     (1, 0, &[1]),
-    // dim 3: s=2, poly = x^2+x+1, a=1, m=[1,1]
-    (2, 1, &[1, 1]),
-    // dim 4: s=3, poly = x^3+x+1, a=1, m=[1,1,1]
-    (3, 1, &[1, 1, 1]),
-    // dim 5: s=3, poly = x^3+x^2+1, a=2, m=[1,3,1]
-    (3, 2, &[1, 3, 1]),
+    // dim 3: s=2, poly = x^2+x+1, a=1, m=[1,3]
+    (2, 1, &[1, 3]),
+    // dim 4: s=3, poly = x^3+x+1, a=1, m=[1,3,1]
+    (3, 1, &[1, 3, 1]),
+    // dim 5: s=3, poly = x^3+x^2+1, a=2, m=[1,1,1]
+    (3, 2, &[1, 1, 1]),
     // dim 6: s=4, poly = x^4+x+1, a=1, m=[1,1,3,3]
     (4, 1, &[1, 1, 3, 3]),
     // dim 7: s=4, poly = x^4+x^3+1, a=4, m=[1,3,5,13]
@@ -446,6 +446,47 @@ mod tests {
     }
 
     #[test]
+    fn sobol_3d_matches_joe_kuo_published_prefix() {
+        // First ten points printed by the publisher's reference generator for
+        // new-joe-kuo-6.21201, including the origin at index zero.
+        let expected = [
+            [0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5],
+            [0.75, 0.25, 0.25],
+            [0.25, 0.75, 0.75],
+            [0.375, 0.375, 0.625],
+            [0.875, 0.875, 0.125],
+            [0.625, 0.125, 0.875],
+            [0.125, 0.625, 0.375],
+            [0.1875, 0.3125, 0.9375],
+            [0.6875, 0.8125, 0.4375],
+        ];
+        let mut generator = SobolGenerator::new(3);
+
+        for (index, expected_point) in expected.into_iter().enumerate() {
+            assert_eq!(
+                generator.next(),
+                expected_point,
+                "published Sobol point {index} differs"
+            );
+        }
+    }
+
+    #[test]
+    fn embedded_joe_kuo_rows_match_published_direction_file() {
+        let expected: [(u32, u32, &[u32]); 7] = [
+            (1, 0, &[1]),
+            (2, 1, &[1, 3]),
+            (3, 1, &[1, 3, 1]),
+            (3, 2, &[1, 1, 1]),
+            (4, 1, &[1, 1, 3, 3]),
+            (4, 4, &[1, 3, 5, 13]),
+            (5, 2, &[1, 1, 5, 5, 17]),
+        ];
+        assert_eq!(JOE_KUO_D2_D8, expected);
+    }
+
+    #[test]
     fn sobol_in_unit_cube() {
         let pts = sobol_sequence(1024, 4);
         for p in &pts {
@@ -457,18 +498,28 @@ mod tests {
     }
 
     #[test]
-    fn sobol_generator_skip_consistent() {
-        // Generating 10 points should equal skipping 5 then generating 5,
-        // prepended with the first 5 from a fresh generator.
-        let mut gen1 = SobolGenerator::new(3);
-        let all: Vec<_> = (0..10).map(|_| gen1.next()).collect();
+    fn sobol_generator_skip_matches_generated_prefixes() {
+        for dim in [1, 3, 8] {
+            let mut baseline = SobolGenerator::new(dim);
+            let all: Vec<_> = (0..40).map(|_| baseline.next()).collect();
 
-        let mut gen2 = SobolGenerator::new(3);
-        gen2.skip(5);
-        let last5: Vec<_> = (0..5).map(|_| gen2.next()).collect();
+            for skip in [0usize, 1, 2, 3, 7, 8, 15, 16, 31] {
+                let mut skipped = SobolGenerator::new(dim);
+                skipped.skip(skip as u64);
+                assert_eq!(skipped.index(), skip as u64);
+                assert_eq!(skipped.next(), all[skip], "dimension {dim}, skip {skip}");
+            }
+        }
+    }
 
-        for (a, b) in all[5..].iter().zip(&last5) {
-            assert_eq!(a, b);
+    #[test]
+    fn sobol_sequence_matches_generator_after_skipping_origin() {
+        for dim in [1, 3, 8] {
+            let expected = sobol_sequence(32, dim);
+            let mut generator = SobolGenerator::new(dim);
+            generator.skip(1);
+            let actual: Vec<_> = (0..32).map(|_| generator.next()).collect();
+            assert_eq!(actual, expected, "dimension {dim}");
         }
     }
 
