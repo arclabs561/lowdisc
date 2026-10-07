@@ -29,6 +29,6 @@ assert!((pts[0][1] - 0.5).abs() < 1e-12);
 |----------------|-------------|
 | `halton_point` | Single Halton point in `[0, 1)^d` |
 | `halton_sequence` | Halton sequence using the first 20 prime bases |
-| `SobolGenerator` | Incremental Sobol generator |
-| `sobol_sequence` | Sobol sequence, skipping the origin |
-| `sobol_scrambled` | Hash-based Owen-scrambled Sobol sequence |
+| `SobolGenerator` | Incremental Sobol generator, up to 8 dimensions |
+| `sobol_sequence` | Sobol sequence, skipping the origin, up to 8 dimensions |
+| `sobol_scrambled` | Hash-based Owen-scrambled Sobol sequence, up to 8 dimensions |

@@ -10,8 +10,8 @@
 //!   Simple, no precomputation, but quality degrades above ~20 dimensions
 //!   due to correlation between coordinates.
 //! - **Sobol**: direction-number construction with Gray-code enumeration.
-//!   Better high-dimensional uniformity than Halton.  Direction numbers from
-//!   Joe & Kuo (2010) support up to dimension 1111.
+//!   Better high-dimensional uniformity than Halton.  The embedded direction
+//!   numbers support up to 8 dimensions.
 //! - **Owen-scrambled Sobol**: random digit scrambling that preserves the
 //!   low-discrepancy property while breaking systematic patterns.  Enables
 //!   unbiased variance estimation from a single randomized QMC sequence.
