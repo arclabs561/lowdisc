@@ -26,9 +26,11 @@
 //!   projections." SIAM J. Sci. Comput. 30(5). (The direction-number table
 //!   below comes from their 2010 data file, new-joe-kuo-6.21201.)
 //! - Owen (1995): "Randomly permuted (t,m,s)-nets and (t,s)-sequences."
+//! - Owen (2020): "On dropping the first Sobol' point."
 //! - Martinez & Williams (2026): "QMC Methods Enable Extremely Low-Dimensional
 //!   Deep Generative Models."
 
+#![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
@@ -343,6 +345,11 @@ fn owen_scramble(mut x: u64, dim: u64, seed: u64) -> u64 {
 /// The scrambling preserves low-discrepancy while randomizing the sequence,
 /// enabling unbiased variance estimation from a single QMC run.
 ///
+/// Unlike [`sobol_sequence`], this keeps index 0: after scrambling it is a
+/// uniform random point, not the origin, and dropping it would break the
+/// net property of the first `2^m` points (Owen 2020, "On dropping the first
+/// Sobol' point").
+///
 /// # Panics
 ///
 /// Panics if `d` is 0 or exceeds 8.
@@ -359,7 +366,6 @@ fn owen_scramble(mut x: u64, dim: u64, seed: u64) -> u64 {
 /// ```
 pub fn sobol_scrambled(n: usize, d: usize, seed: u64) -> Vec<Vec<f64>> {
     let mut gen = SobolGenerator::new(d);
-    gen.skip(1); // skip origin
     let scale = (1u64 << SOBOL_BITS) as f64;
     (0..n)
         .map(|_| {
@@ -608,6 +614,31 @@ mod tests {
                 assert!(
                     seen.iter().all(|&c| c == 1),
                     "seed {seed}, box shape 2^-{k} x 2^-{}: counts not all 1",
+                    m - k
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn sobol_scrambled_prefix_is_a_net() {
+        // Owen (2020), "On dropping the first Sobol' point": a scrambled
+        // Sobol' prefix of 2^m points is a (0, m, 2)-net only if index 0 is
+        // kept. Every elementary box of volume 2^-m must hold one point.
+        let m = 6u32;
+        let n = 1usize << m;
+        for seed in [0u64, 7, 42] {
+            let pts = sobol_scrambled(n, 2, seed);
+            for k in 0..=m {
+                let mut seen = vec![0u32; n];
+                for p in &pts {
+                    let a = (p[0] * (1u64 << k) as f64) as usize;
+                    let b = (p[1] * (1u64 << (m - k)) as f64) as usize;
+                    seen[(a << (m - k)) | b] += 1;
+                }
+                assert!(
+                    seen.iter().all(|&c| c == 1),
+                    "seed {seed}, box 2^-{k} x 2^-{}: {seen:?}",
                     m - k
                 );
             }
