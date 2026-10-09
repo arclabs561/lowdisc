@@ -22,8 +22,9 @@
 //!   in evaluating multi-dimensional integrals."
 //! - Sobol (1967): "Distribution of points in a cube and approximate evaluation
 //!   of integrals."
-//! - Joe & Kuo (2010): "Constructing Sobol sequences with better two-dimensional
-//!   projections."
+//! - Joe & Kuo (2008): "Constructing Sobol sequences with better two-dimensional
+//!   projections." SIAM J. Sci. Comput. 30(5). (The direction-number table
+//!   below comes from their 2010 data file, new-joe-kuo-6.21201.)
 //! - Owen (1995): "Randomly permuted (t,m,s)-nets and (t,s)-sequences."
 //! - Martinez & Williams (2026): "QMC Methods Enable Extremely Low-Dimensional
 //!   Deep Generative Models."
@@ -315,8 +316,11 @@ fn owen_scramble(mut x: u64, dim: u64, seed: u64) -> u64 {
     // the seed, matching the structure of Owen's tree-based scramble.
     for i in 0..SOBOL_BITS {
         let bit_mask = 1u64 << (SOBOL_BITS - 1 - i);
-        // Hash the prefix (bits above position i) combined with seed and dim.
-        let prefix = x >> (SOBOL_BITS - i);
+        // Hash the tree node (depth i, bits above position i) combined with
+        // seed and dim. The sentinel bit 1 << i keeps nodes at different
+        // depths distinct: without it, prefix 0 at depth i would reuse the
+        // coin of prefix 0 at depth i - 1 and the scramble is not uniform.
+        let prefix = (x >> (SOBOL_BITS - i)) | (1u64 << i);
         let mut h = seed
             .wrapping_mul(0x9E37_79B9_7F4A_7C15)
             .wrapping_add(dim)
@@ -551,6 +555,63 @@ mod tests {
         let a = sobol_scrambled(32, 2, 42);
         let b = sobol_scrambled(32, 2, 42);
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn owen_scrambled_point_is_uniform_over_seeds() {
+        // Owen (1995), Prop. 2: under nested uniform scrambling each point is
+        // U[0,1). Over 4096 seeds the top 3 scrambled bits of a fixed input
+        // must fill all 8 cells evenly; chi-square with 7 df, 99.9% critical
+        // value 24.32. A flip that ignores depth makes node (d, prefix 0)
+        // share a coin with (d-1, prefix 0), so cells like 0b01x never occur.
+        const SEEDS: u64 = 4096;
+        for x in [0u64, 1 << (SOBOL_BITS - 1), 0x5_5555_5555_5555, 12345] {
+            let mut counts = [0u32; 8];
+            for seed in 0..SEEDS {
+                let top = owen_scramble(x, 0, seed) >> (SOBOL_BITS - 3);
+                counts[top as usize] += 1;
+            }
+            let expected = SEEDS as f64 / 8.0;
+            let chi2: f64 = counts
+                .iter()
+                .map(|&c| (c as f64 - expected).powi(2) / expected)
+                .sum();
+            assert!(chi2 < 24.32, "x={x:#x}: cells {counts:?}, chi2 {chi2:.1}");
+        }
+    }
+
+    #[test]
+    fn owen_scrambling_keeps_one_point_per_elementary_box() {
+        // The first 2^m Sobol points in dims 1-2 (origin included) form a
+        // (0, m, 2)-net: every elementary box [a 2^-k, (a+1) 2^-k) x
+        // [b 2^-(m-k), (b+1) 2^-(m-k)) holds exactly one point. Owen
+        // scrambling must preserve this for every seed.
+        let m = 8u32;
+        for seed in [0u64, 1, 42, 0xDEAD_BEEF] {
+            let mut gen = SobolGenerator::new(2);
+            let pts: Vec<[u64; 2]> = (0..1u64 << m)
+                .map(|_| {
+                    gen.next();
+                    [
+                        owen_scramble(gen.x[0], 0, seed),
+                        owen_scramble(gen.x[1], 1, seed),
+                    ]
+                })
+                .collect();
+            for k in 0..=m {
+                let mut seen = vec![0u32; 1 << m];
+                for p in &pts {
+                    let a = p[0] >> (SOBOL_BITS as u32 - k);
+                    let b = p[1] >> (SOBOL_BITS as u32 - (m - k));
+                    seen[((a << (m - k)) | b) as usize] += 1;
+                }
+                assert!(
+                    seen.iter().all(|&c| c == 1),
+                    "seed {seed}, box shape 2^-{k} x 2^-{}: counts not all 1",
+                    m - k
+                );
+            }
+        }
     }
 
     // ------- Integration test: QMC vs MC convergence -------
