@@ -9,11 +9,8 @@ Low-discrepancy sequences.
 Owen-scrambled Sobol points for quasi-Monte Carlo integration and deterministic
 sampling designs.
 
-For Sobol points in more than 8 dimensions use `sobol_burley` (seedable
-Owen-scrambled Sobol, up to 256 dimensions, `f32` output); in Python,
-`scipy.stats.qmc` covers Sobol, Halton and discrepancy measures.
-
-Dual-licensed under MIT or Apache-2.0.
+The embedded Sobol direction numbers cover 8 dimensions and the Halton
+functions use 20 prime bases; asking for more dimensions panics.
 
 ```toml
 [dependencies]
@@ -36,3 +33,7 @@ assert!((pts[0][1] - 0.5).abs() < 1e-12);
 | `SobolGenerator` | Incremental Sobol generator, up to 8 dimensions |
 | `sobol_sequence` | Sobol sequence, skipping the origin, up to 8 dimensions |
 | `sobol_scrambled` | Hash-based Owen-scrambled Sobol sequence, keeping index 0, up to 8 dimensions |
+
+## License
+
+MIT OR Apache-2.0
